@@ -1,0 +1,228 @@
+<?php
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function registry_autoload_module_implements_alter(&$implementations, $hook) {
+  // Move our hook implementation to the bottom, so we are called last.
+  if ($hook == 'registry_files_alter') {
+    $group = $implementations['registry_autoload'];
+    unset($implementations['registry_autoload']);
+    $implementations['registry_autoload'] = $group;
+  }
+}
+ 
+/**
+ * Implements hook_registry_files_alter().
+ */
+function registry_autoload_registry_files_alter(&$files, $indexed_modules) {
+  $parsed_files = registry_get_parsed_files();
+  $autoload_searcher = new RegistryAutoloadSearcher($parsed_files);
+
+  $registry = array();
+
+  // Search for modules that specify registry_autoload in info.
+  foreach ($indexed_modules as $module) {
+    if (empty($module->info['registry_autoload']) && empty($module->info['registry_autoload_files'])) {
+      continue;
+    }
+    // Ensure that properties exist.
+    $module->info += array(
+      'registry_autoload' => array(),
+      'registry_autoload_files' => array(),
+    );
+
+    $class_files = array();
+
+    // Detect class files based on namespaces.
+    foreach ($module->info['registry_autoload'] as $format) {
+      $class_files = array_merge($class_files, $autoload_searcher->findClassFiles($module, $format));
+    }
+
+    // Merge in user provided class files.
+    foreach ($module->info['registry_autoload_files'] as $class_file) {
+      $class_files[] = $module->dir . '/' . $class_file;
+    }
+
+    $registry = array_merge($registry, $autoload_searcher->processFiles($class_files, $module));
+  }
+
+  // Give other modules a chance to alter the registry before we save it.
+  drupal_alter('registry_autoload_registry', $registry);
+
+  foreach ($registry as $filename => $entry) {
+    // Add the files to the registry.
+    // Note: Because the hash is the same it won't try to reparse it.
+    $files[$entry->filename] = array(
+      'module' => $entry->module,
+      'weight' => $entry->weight,
+    );
+
+    // And update the registry_file table.
+    db_merge('registry_file')
+      ->key(array('filename' => $entry->filename))
+      ->fields(array(
+        'hash' => $entry->hash,
+      ))
+      ->execute();
+
+    $names = array();
+    foreach ($entry->classes as $class_name => $info) {
+      $names[] = $class_name;
+
+      db_merge('registry')->key(array(
+        'name' => $class_name,
+        'type' => $info['type'],
+      ))->fields(array(
+        'filename' => $entry->filename,
+        'module' => $entry->module,
+        'weight' => $entry->weight,
+      ))->execute();
+    }
+
+    // Now delete all classes for filename no longer existing.
+    db_delete('registry')
+      ->condition('filename', $entry->filename)
+      ->condition('name', $names, 'NOT IN')
+      ->execute();
+  }
+}
+
+// This is just a little searcher helper.
+
+class RegistryAutoloadSearcher {
+
+  // @todo Make configurable.
+  /**
+   * @var array $map
+   */
+  protected $map = array(
+    'psr-0' => 'lib',
+    'psr-4' => 'src',
+  );
+
+  /**
+   * @var array $parsedFiles
+   */
+  protected $parsedFiles = array();
+
+  /**
+   * Constructs the object.
+   */
+  public function __construct(array $parsedFiles) {
+    $this->parsedFiles = $parsedFiles;
+  }
+
+  /**
+   * Finds class files in the given module for the given format.
+   *
+   * @param stdClass $module
+   * @param string $format
+   *
+   * @return array
+   */
+  public function findClassFiles($module, $format) {
+    if (empty($this->map[$format])) {
+      return array();
+    }
+    $subdir = $this->map[$format];
+    $directory = $module->dir . '/' . $subdir;
+    $class_files = file_scan_directory($directory, '/.*.php$/');
+
+    return array_keys($class_files);
+  }
+
+  /**
+   * Processes files containing classes for the given module.
+   *
+   * @param array $class_files
+   * @param stdClass $module
+   *
+   * @return array
+   */
+  public function processFiles($class_files, $module) {
+    $registry = array();
+
+    foreach ($class_files as $filename) {
+      $hash = NULL;
+      if ($this->checkFileNeedsUpdate($filename, $hash)) {
+        $registry = array_merge($registry, $this->parseFile($filename, $module, $hash));
+      }
+    }
+    
+    return $registry;
+  }
+
+  /**
+   * Checks if the file exists and is in need of an update.
+   *
+   * @param string $filename
+   *   The filename to check against the registry_file table.
+   * @param string $hash
+   *   The hash passed by reference for later usage.
+   *
+   * @return bool
+   *   TRUE if the file exists and needs update, FALSE otherwise.
+   */
+  protected function checkFileNeedsUpdate($filename, &$hash) {
+    // Check if file exists.
+    if (!file_exists($filename)) {
+      return FALSE; 
+    }
+
+    // Check if hash matches still.
+    $stored_hash = !empty($this->parsedFiles[$filename]['hash']) ? $this->parsedFiles[$filename] : NULL;
+    $hash = hash_file('sha256', $filename);
+    if (!empty($stored_hash) && $stored_hash == $hash) {
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+  
+  /**
+   * Parses a file for classes and interfaces, including the namespace.
+   *
+   * This lifts the core limitation of not supporting namespaces.
+   *
+   * @param string $filename
+   * @param stdClass $module
+   * @param string $hash
+   *
+   * @return array
+   */
+  protected function parseFile($filename, $module, $hash) {
+    $registry = array();
+    $contents = file_get_contents($filename);
+    $namespace = '';
+
+    // Find namespace
+    if (preg_match_all('/^\s*namespace\s+([a-zA-Z0-9_\\\\]+)/m', $contents, $matches)) {
+      $namespace = $matches[1][0] . '\\';
+    }
+
+    // Now actually parse the file.
+    if (!preg_match_all('/^\s*(?:abstract|final)?\s*(class|interface)\s+([a-zA-Z0-9_]+)/m', $contents, $matches)) {
+      return $registry;
+    }
+
+    $registry[$filename] = (object) array(
+      'classes' => array(),
+      'filename' => $filename,
+      'module' => $module->name,
+      'weight' => $module->weight,
+      // We create a unique structure to populate both registry tables. 
+      'hash' => $hash,
+    );
+
+    foreach ($matches[2] as $key => $name) {
+      $type = $matches[1][$key];
+      $registry[$filename]->classes[$namespace . $name] = array(
+        'name' => $namespace . $name,
+        'type' => $type,
+      );
+    }
+
+    return $registry; 
+  }
+}

@@ -1,0 +1,3 @@
+name = Registry Autoload 
+description = Adds support for PSR-0 and PSR-4 to the Drupal 7 core registry.
+core = 7.x
