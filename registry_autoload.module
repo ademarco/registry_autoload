@@ -110,38 +110,50 @@ class RegistryAutoloadSearcher {
 
   // @todo Make configurable.
   /**
-   * @var array $map
+   * The namespace $map maps the namespaces provided to subdirectories.
+   *
+   * @var array
    */
-  protected $map = array(
+  protected $formatMap = array(
     'psr-0' => 'lib',
     'psr-4' => 'src',
   );
 
   /**
+   * The current content of the {registry_file} table.
+   *
+   * @see registry_get_parsed_files()
+   *
    * @var array $parsedFiles
    */
   protected $parsedFiles = array();
 
   /**
-   * Constructs the object.
+   * Constructs a RegistryAutoloadSearcher object.
+   *
+   * @param array $parsed_files
+   *   The current content of the {registry_file} table.
    */
-  public function __construct(array $parsedFiles) {
-    $this->parsedFiles = $parsedFiles;
+  public function __construct(array $parsed_files) {
+    $this->parsedFiles = $parsed_files;
   }
 
   /**
    * Finds class files in the given module for the given format.
    *
-   * @param stdClass $module
+   * @param object $module
+   *   The module object as given to hook_registry_files_alter().
    * @param string $format
+   *   The format to scan for as specified in the $formatMap.
    *
    * @return array
+   *   Returns all found php files for the given module and format.
    */
   public function findClassFiles($module, $format) {
-    if (empty($this->map[$format])) {
+    if (empty($this->formatMap[$format])) {
       return array();
     }
-    $subdir = $this->map[$format];
+    $subdir = $this->formatMap[$format];
     $directory = $module->dir . '/' . $subdir;
     $class_files = file_scan_directory($directory, '/.*.php$/');
 
@@ -152,9 +164,21 @@ class RegistryAutoloadSearcher {
    * Processes files containing classes for the given module.
    *
    * @param array $class_files
-   * @param stdClass $module
+   *   The files to scan for classes.
+   * @param object $module
+   *   The module object as given to hook_registry_files_alter().
    *
    * @return array
+   *   An associative array keyed by filename with the following properties:
+   *   - classes: An associative array keyed by namespace + name with properties:
+   *     - type: Type of the class, can be 'interface' or 'class'.
+   *     - name: Name of the class or interface.
+   *     This can be empty if needs_update below is FALSE.
+   *   - filename: The filename of the file.
+   *   - module: The module this file belongs to.
+   *   - weight: The weight of the module this file belongs to.
+   *   - hash: The file_hash() of the filename.
+   *   - needs_update: Whether the registry needs to be updated or not.
    */
   public function processFiles($class_files, $module) {
     $registry = array();
@@ -190,12 +214,12 @@ class RegistryAutoloadSearcher {
    * Checks if the is in need of an update.
    *
    * @param string $filename
-   *   The filename to check against the registry_file table.
+   *   The filename to check against the {registry_file} table.
    * @param string $hash
    *   The hash passed by reference for later usage.
    *
    * @return bool
-   *   TRUE if the file exists and needs update, FALSE otherwise.
+   *   TRUE if the file needs an update, FALSE otherwise.
    */
   protected function checkFileNeedsUpdate($filename, &$hash) {
     // Check if hash matches still.
@@ -213,10 +237,15 @@ class RegistryAutoloadSearcher {
    *
    * This lifts the core limitation of not supporting namespaces.
    *
-   * @param stdClass $entry
+   * @param object $entry
+   *   The registry entry as defined in processFiles(). The classes key will be
+   *   updated in the entry if classes can be found.
    * @param string $filename
+   *   The filename to parse.
    *
    * @return bool
+   *   TRUE if classes could be found, FALSE otherwise.
+   *   
    */
   protected function parseFile($entry, $filename) {
     $contents = file_get_contents($filename);
