@@ -10,4 +10,5 @@ function registry_autoload_test_class_loading() {
   $x = new \Drupal\registry_autoload_test\Cache\RCTest();
   $x = new \RCTest();
   $x = new \Custom\Some\Name\space\RCTest();
+  unset($x);
 }
