@@ -253,9 +253,9 @@ class RegistryAutoloadSearcher {
     $contents = file_get_contents($filename);
     $namespace = '';
 
-    // Find namespace within the file.
-    if (preg_match_all('/^\s*namespace\s+([a-zA-Z0-9_\\\\]+)/m', $contents, $matches)) {
-      $namespace = $matches[1][0] . '\\';
+    // We support one namespace per file.
+    if (preg_match('/^\s*(?:declare[^;]+;\s*)?namespace\s+\\\\?([a-zA-Z0-9_\\\\]+)/ms', $contents, $matches)) {
+      $namespace = $matches[1] . '\\';
     }
 
     // Now actually parse the file.
