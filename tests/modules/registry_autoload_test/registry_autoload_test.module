@@ -1,0 +1,13 @@
+<?php
+
+namespace Foo;
+
+/**
+ * Test function to test class loading.
+ */
+function registry_autoload_test_class_loading() {
+  $x = new \Drupal\Core\Cache\RCTest();
+  $x = new \Drupal\registry_autoload_test\Cache\RCTest();
+  $x = new \RCTest();
+  $x = new \Custom\Some\Name\space\RCTest();
+}

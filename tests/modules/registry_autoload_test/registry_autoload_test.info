@@ -1,0 +1,14 @@
+name = Registry Autoload - Tests
+description = Support module for registry_autoload related testing.
+package = Testing
+core = 7.x
+hidden = TRUE
+
+; Core Registry
+files[] = includes/RCTest.class.php
+
+; Registry Autoload
+registry_autoload[] = psr-0
+registry_autoload[] = psr-4
+
+registry_autoload_files[] = custom/some/name/space/RCTest.php
