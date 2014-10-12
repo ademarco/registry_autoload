@@ -23,7 +23,7 @@
  *   - hash: The file_hash() of the filename.
  *   - needs_update: Whether the registry needs to be updated or not.
  */
-function hook_registry_autoload_registry_alter(&$registry) {
+function hook_registry_autoload_registry_alter(array &$registry) {
   // Remove all classes within RegistryAutoloadTestTest.php as defined by
   // registry_autoload_test module within the includes/ directory.
   $module_path = drupal_get_path('module', 'registry_autoload_test');
