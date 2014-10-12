@@ -238,8 +238,6 @@ class RegistryAutoloadSearcher {
    *
    * This lifts the core limitation of not supporting namespaces.
    *
-   * @see _registry_parse_file()
-   *
    * @param object $entry
    *   The registry entry as defined in processFiles(). The classes key will be
    *   updated in the entry if classes can be found.
@@ -248,6 +246,8 @@ class RegistryAutoloadSearcher {
    *
    * @return bool
    *   TRUE if classes could be found, FALSE otherwise.
+   *
+   * @see _registry_parse_file()
    */
   protected function parseFile($entry, $filename) {
     $contents = file_get_contents($filename);
