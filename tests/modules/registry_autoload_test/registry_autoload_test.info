@@ -4,6 +4,8 @@ package = Testing
 core = 7.x
 hidden = TRUE
 
+dependencies[] = registry_autoload
+
 ; Core Registry
 files[] = includes/RegistryAutoloadTestTest.class.php
 

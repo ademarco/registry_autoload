@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Contains tests to manually test registry_autoload module functionality.
+ */
 
 namespace Foo;
 

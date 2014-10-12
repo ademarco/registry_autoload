@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Tests that PSR-0 namespaced classes get registered correctly.
+ */
 
 namespace Drupal\Core\Cache;
 
