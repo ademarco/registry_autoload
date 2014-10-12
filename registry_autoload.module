@@ -58,6 +58,10 @@ function registry_autoload_registry_files_alter(&$files, $indexed_modules) {
       'weight' => $entry->weight,
     );
 
+    if (empty($entry->needs_update)) {
+      continue;
+    }
+
     // And update the registry_file table.
     db_merge('registry_file')
       ->key(array('filename' => $entry->filename))
@@ -144,9 +148,26 @@ class RegistryAutoloadSearcher {
     $registry = array();
 
     foreach ($class_files as $filename) {
+      // Check if file exists.
+      if (!file_exists($filename)) {
+        continue;
+      }
+
       $hash = NULL;
-      if ($this->checkFileNeedsUpdate($filename, $hash)) {
-        $registry = array_merge($registry, $this->parseFile($filename, $module, $hash));
+      $needs_update = $this->checkFileNeedsUpdate($filename, $hash);
+
+      $registry[$filename] = (object) array(
+        'classes' => array(),
+        'filename' => $filename,
+        'module' => $module->name,
+        'weight' => $module->weight,
+        // We create a unique structure to populate both registry tables.
+        'hash' => $hash,
+        'needs_update' => $needs_update,
+      );
+
+      if ($needs_update) {
+        $this->parseFile($registry[$filename], $filename);
       }
     }
     
@@ -154,7 +175,7 @@ class RegistryAutoloadSearcher {
   }
 
   /**
-   * Checks if the file exists and is in need of an update.
+   * Checks if the is in need of an update.
    *
    * @param string $filename
    *   The filename to check against the registry_file table.
@@ -165,13 +186,8 @@ class RegistryAutoloadSearcher {
    *   TRUE if the file exists and needs update, FALSE otherwise.
    */
   protected function checkFileNeedsUpdate($filename, &$hash) {
-    // Check if file exists.
-    if (!file_exists($filename)) {
-      return FALSE; 
-    }
-
     // Check if hash matches still.
-    $stored_hash = !empty($this->parsedFiles[$filename]['hash']) ? $this->parsedFiles[$filename] : NULL;
+    $stored_hash = !empty($this->parsedFiles[$filename]['hash']) ? $this->parsedFiles[$filename]['hash'] : NULL;
     $hash = hash_file('sha256', $filename);
     if (!empty($stored_hash) && $stored_hash == $hash) {
       return FALSE;
@@ -185,14 +201,12 @@ class RegistryAutoloadSearcher {
    *
    * This lifts the core limitation of not supporting namespaces.
    *
+   * @param stdClass $entry
    * @param string $filename
-   * @param stdClass $module
-   * @param string $hash
    *
-   * @return array
+   * @return bool
    */
-  protected function parseFile($filename, $module, $hash) {
-    $registry = array();
+  protected function parseFile($entry, $filename) {
     $contents = file_get_contents($filename);
     $namespace = '';
 
@@ -203,26 +217,17 @@ class RegistryAutoloadSearcher {
 
     // Now actually parse the file.
     if (!preg_match_all('/^\s*(?:abstract|final)?\s*(class|interface)\s+([a-zA-Z0-9_]+)/m', $contents, $matches)) {
-      return $registry;
+      return FALSE;
     }
-
-    $registry[$filename] = (object) array(
-      'classes' => array(),
-      'filename' => $filename,
-      'module' => $module->name,
-      'weight' => $module->weight,
-      // We create a unique structure to populate both registry tables. 
-      'hash' => $hash,
-    );
 
     foreach ($matches[2] as $key => $name) {
       $type = $matches[1][$key];
-      $registry[$filename]->classes[$namespace . $name] = array(
+      $entry->classes[$namespace . $name] = array(
         'name' => $namespace . $name,
         'type' => $type,
       );
     }
 
-    return $registry; 
+    return TRUE;
   }
 }
