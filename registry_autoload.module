@@ -6,7 +6,6 @@
 
 // Core hooks
 // --------------------------------------------------------------------------
-
 /**
  * Implements hook_module_implements_alter().
  */
@@ -101,7 +100,6 @@ function registry_autoload_registry_files_alter(&$files, $indexed_modules) {
 
 // Helper classes
 // --------------------------------------------------------------------------
-
 /**
  * RegistryAutoloadSearcher helper class.
  *
