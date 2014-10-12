@@ -50,7 +50,7 @@ function registry_autoload_registry_files_alter(&$files, $indexed_modules) {
   // Give other modules a chance to alter the registry before we save it.
   drupal_alter('registry_autoload_registry', $registry);
 
-  foreach ($registry as $filename => $entry) {
+  foreach ($registry as $entry) {
     // Add the files to the registry.
     // Note: Because the hash is the same it won't try to reparse it.
     $files[$entry->filename] = array(
@@ -93,7 +93,6 @@ function registry_autoload_registry_files_alter(&$files, $indexed_modules) {
 }
 
 // This is just a little searcher helper.
-
 class RegistryAutoloadSearcher {
 
   // @todo Make configurable.
