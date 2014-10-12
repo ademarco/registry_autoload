@@ -7,6 +7,9 @@
 namespace Drupal\Core\Cache;
 
 class RegistryAutoloadTestTest {
+  /**
+   * Constructs a RegistryAutoloadTestTest object.
+   */
   public function __construct() {
     print "Hello Core\n";
   }
