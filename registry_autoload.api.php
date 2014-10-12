@@ -10,9 +10,10 @@
  * This is useful to change the registry_autoload registry, before it is written
  * to the registry table.
  *
- * @param $registry
- *   An associative array keyed by filename with the following properties:
- *   - classes: An associative array keyed by namespace + name with properties:
+ * @param array $registry
+ *   An associative array keyed by filename with object values.
+ *   The objects have the following properties:
+ *   - classes: An associative array keyed by namespace+name with properties:
  *     - type: Type of the class, can be 'interface' or 'class'.
  *     - name: Name of the class or interface.
  *     This can be empty if needs_update below is FALSE.

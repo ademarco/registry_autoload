@@ -169,8 +169,9 @@ class RegistryAutoloadSearcher {
    *   The module object as given to hook_registry_files_alter().
    *
    * @return array
-   *   An associative array keyed by filename with the following properties:
-   *   - classes: An associative array keyed by namespace + name with properties:
+   *   An associative array keyed by filename with object values.
+   *   The objects have the following properties:
+   *   - classes: An associative array keyed by namespace+name with properties:
    *     - type: Type of the class, can be 'interface' or 'class'.
    *     - name: Name of the class or interface.
    *     This can be empty if needs_update below is FALSE.
@@ -180,7 +181,7 @@ class RegistryAutoloadSearcher {
    *   - hash: The file_hash() of the filename.
    *   - needs_update: Whether the registry needs to be updated or not.
    */
-  public function processFiles($class_files, $module) {
+  public function processFiles(array $class_files, $module) {
     $registry = array();
 
     foreach ($class_files as $filename) {
@@ -237,6 +238,8 @@ class RegistryAutoloadSearcher {
    *
    * This lifts the core limitation of not supporting namespaces.
    *
+   * @see _registry_parse_file().
+   *
    * @param object $entry
    *   The registry entry as defined in processFiles(). The classes key will be
    *   updated in the entry if classes can be found.
@@ -245,13 +248,12 @@ class RegistryAutoloadSearcher {
    *
    * @return bool
    *   TRUE if classes could be found, FALSE otherwise.
-   *   
    */
   protected function parseFile($entry, $filename) {
     $contents = file_get_contents($filename);
     $namespace = '';
 
-    // Find namespace
+    // Find namespace within the file.
     if (preg_match_all('/^\s*namespace\s+([a-zA-Z0-9_\\\\]+)/m', $contents, $matches)) {
       $namespace = $matches[1][0] . '\\';
     }
