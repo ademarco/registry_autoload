@@ -1,4 +1,11 @@
 <?php
+/**
+ * @file
+ * Main module for enabling core registry to support namespaced files.
+ */
+
+// Core hooks
+// --------------------------------------------------------------------------
 
 /**
  * Implements hook_module_implements_alter().
@@ -11,7 +18,7 @@ function registry_autoload_module_implements_alter(&$implementations, $hook) {
     $implementations['registry_autoload'] = $group;
   }
 }
- 
+
 /**
  * Implements hook_registry_files_alter().
  */
@@ -92,7 +99,15 @@ function registry_autoload_registry_files_alter(&$files, $indexed_modules) {
   }
 }
 
-// This is just a little searcher helper.
+// Helper classes
+// --------------------------------------------------------------------------
+
+/**
+ * RegistryAutoloadSearcher helper class.
+ *
+ * Note: This class is not registered via the registry so it is available
+ *       while the registry is being rebuild.
+ */
 class RegistryAutoloadSearcher {
 
   // @todo Make configurable.
@@ -169,7 +184,7 @@ class RegistryAutoloadSearcher {
         $this->parseFile($registry[$filename], $filename);
       }
     }
-    
+
     return $registry;
   }
 
@@ -194,7 +209,7 @@ class RegistryAutoloadSearcher {
 
     return TRUE;
   }
-  
+
   /**
    * Parses a file for classes and interfaces, including the namespace.
    *
