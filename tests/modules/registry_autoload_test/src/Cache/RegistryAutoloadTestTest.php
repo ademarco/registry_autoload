@@ -2,11 +2,11 @@
 
 namespace Drupal\registry_autoload_test\Cache;
 
-interface RCTestInterface {
+interface RegistryAutoloadTestTestInterface {
   public function x();
 }
 
-class RCTest {
+class RegistryAutoloadTestTest {
   public function __construct() {
     print "Hello Render_Cache\n";
   }

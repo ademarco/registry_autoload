@@ -2,7 +2,7 @@
 
 namespace Drupal\Core\Cache;
 
-class RCTest {
+class RegistryAutoloadTestTest {
   public function __construct() {
     print "Hello Core\n";
   }

@@ -5,10 +5,10 @@ core = 7.x
 hidden = TRUE
 
 ; Core Registry
-files[] = includes/RCTest.class.php
+files[] = includes/RegistryAutoloadTestTest.class.php
 
 ; Registry Autoload
 registry_autoload[] = psr-0
 registry_autoload[] = psr-4
 
-registry_autoload_files[] = custom/some/name/space/RCTest.php
+registry_autoload_files[] = custom/some/name/space/RegistryAutoloadTestTest.php
