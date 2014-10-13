@@ -3,7 +3,7 @@ Simple module to add PSR-0 and PSR-4 support to the Drupal 7 Core registry.
 ### INSTALL
 
 - Enable the module
-- Change your .info files and add registry\_autoload[] = psr-0 or psr-4 key
+- Change your .info files and add registry\_autoload[] = PSR-0 or PSR-4 key
 - Put your files in src/ for PSR-4 and lib/ for PSR-0.
 - DONE
 
@@ -23,8 +23,9 @@ subdir for .php files:
 
 sample.info:
 
-  registry\_autoload[] = psr-0
-  registry\_autoload[] = psr-4
+  registry\_autoload[] = PSR-0
+  registry\_autoload[] = PSR-4
+  registry\_autoload[] = PHPUnit
 
 PSR-0 will by default search the lib/ subdirectory of your module and the
 convention is to repeat the full namespace, e.g.
@@ -50,7 +51,7 @@ If you want to avoid the static file\_scan\_directory use:
 
   registry\_autoload\_files[] = filename
 
-The psr-0 and psr-4 are just shortcuts if you want to register all your files
+The PSR-0 and PSR-4 are just shortcuts if you want to register all your files
 automatically.
 
 ### RELATED MODULES

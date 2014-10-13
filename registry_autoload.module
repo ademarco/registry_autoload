@@ -117,8 +117,9 @@ class RegistryAutoloadSearcher {
    * @var array
    */
   protected $formatMap = array(
-    'psr-0' => 'lib',
-    'psr-4' => 'src',
+    'PSR-0' => 'lib',
+    'PSR-4' => 'src',
+    'PHPUnit' => 'tests/src',
   );
 
   /**
