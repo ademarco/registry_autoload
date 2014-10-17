@@ -90,11 +90,13 @@ function registry_autoload_registry_files_alter(&$files, $indexed_modules) {
       ))->execute();
     }
 
-    // Now delete all classes for filename no longer existing.
-    db_delete('registry')
-      ->condition('filename', $entry->filename)
-      ->condition('name', $names, 'NOT IN')
-      ->execute();
+    if (!empty($names)) {
+      // Now delete all classes for filename no longer existing.
+      db_delete('registry')
+        ->condition('filename', $entry->filename)
+        ->condition('name', $names, 'NOT IN')
+        ->execute();
+    }
   }
 }
 
