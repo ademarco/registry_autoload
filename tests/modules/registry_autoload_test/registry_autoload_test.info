@@ -10,7 +10,7 @@ dependencies[] = registry_autoload
 files[] = includes/RegistryAutoloadTestTest.class.php
 
 ; Registry Autoload
-registry_autoload[] = psr-0
-registry_autoload[] = psr-4
+registry_autoload[] = PSR-0
+registry_autoload[] = PSR-4
 
 registry_autoload_files[] = custom/some/name/space/RegistryAutoloadTestTest.php
