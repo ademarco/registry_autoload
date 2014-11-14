@@ -4,15 +4,13 @@
  * Contains tests to manually test registry_autoload module functionality.
  */
 
-namespace Foo;
-
 /**
  * Test function to test class loading.
  */
 function registry_autoload_test_class_loading() {
-  $x = new \Drupal\Core\Cache\RCTest();
-  $x = new \Drupal\registry_autoload_test\Cache\RCTest();
-  $x = new \RCTest();
-  $x = new \Custom\Some\Name\space\RCTest();
+  $x = new \Drupal\Core\Cache\RegistryAutoloadTestTest();
+  $x = new \Drupal\registry_autoload_test\Cache\RegistryAutoloadTestTest();
+  $x = new \RegistryAutoloadTestTest();
+  $x = new \custom\some\name\space\RegistryAutoloadTestTest();
   unset($x);
 }

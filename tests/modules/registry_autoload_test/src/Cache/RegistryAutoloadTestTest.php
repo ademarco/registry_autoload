@@ -6,18 +6,18 @@
 
 namespace Drupal\registry_autoload_test\Cache;
 
-interface RegistryAutoloadTestTestInterface {
-  /**
-   * Dummy function x to test interfaces.
-   */
-  public function x();
-}
-
-class RegistryAutoloadTestTest {
+class RegistryAutoloadTestTest implements RegistryAutoloadTestTestInterface {
   /**
    * Constructs a RegistryAutoloadTestTest object.
    */
   public function __construct() {
     print "Hello Render_Cache\n";
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function x() {
+    print "Implements x\n";
   }
 }
