@@ -64,3 +64,7 @@ runtime based on the class name.
 
 However this does only need the D7 core registry and only changes the registry
 in a way to add namespaced files, which core could support, too.
+
+### STATUS
+
+[![Build Status](https://travis-ci.org/LionsAd/registry_autoload.svg?branch=7.x-1.x)](https://travis-ci.org/LionsAd/registry_autoload)
