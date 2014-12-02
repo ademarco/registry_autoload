@@ -299,7 +299,8 @@ class RegistryAutoloadSearcher {
           while (($t = $tokens[++$i]) && is_array($t)) {
             if (T_STRING === $t[0]) {
               $class .= $t[1];
-            } elseif ($class !== '' && T_WHITESPACE == $t[0]) {
+            }
+            elseif ($class !== '' && T_WHITESPACE == $t[0]) {
               break;
             }
           }
