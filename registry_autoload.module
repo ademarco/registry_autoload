@@ -241,6 +241,9 @@ class RegistryAutoloadSearcher {
    *
    * This lifts the core limitation of not supporting namespaces.
    *
+   * This code is now based on
+   * \Drupal\xautoload\Discovery\FileInspector::inspectFileContents().
+   *
    * @param object $entry
    *   The registry entry as defined in processFiles(). The classes key will be
    *   updated in the entry if classes can be found.
@@ -256,18 +259,31 @@ class RegistryAutoloadSearcher {
     $contents = file_get_contents($filename);
     $namespace = '';
 
+    // Check if this version of PHP supports traits.
+    $traits = version_compare(PHP_VERSION, '5.4', '<')
+      ? ''
+      : '|trait';
+
+    // Return early if there is no chance of matching anything in this file.
+    if (!preg_match('{\b(?:class|interface' . $traits . ')\s}i', $contents)) {
+      return array();
+    }
+
     // We support one namespace per file.
     if (preg_match('/^\s*(?:declare[^;]+;\s*)?namespace\s+\\\\?([a-zA-Z0-9_\\\\]+)/ms', $contents, $matches)) {
       $namespace = $matches[1] . '\\';
     }
 
     // Now actually parse the file.
-    if (!preg_match_all('/^\s*(?:abstract|final)?\s*(class|interface)\s+([a-zA-Z0-9_]+)/m', $contents, $matches)) {
+    if (!preg_match_all('/^\s*(?:abstract|final)?\s*(class|interface' . $traits . ')\s+([a-zA-Z0-9_]+)/m', $contents, $matches)) {
       return FALSE;
     }
 
     foreach ($matches[2] as $key => $name) {
       $type = $matches[1][$key];
+      if ($type == 'trait') {
+        $type = 'class';
+      }
       $entry->classes[$namespace . $name] = array(
         'name' => $namespace . $name,
         'type' => $type,
