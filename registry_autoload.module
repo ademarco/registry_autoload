@@ -279,8 +279,9 @@ class RegistryAutoloadSearcher {
 
       $class = '';
 
-      switch ($token[0]) {
-        case T_NAMESPACE:
+      $token_name = token_name($token[0]);
+      switch ($token_name) {
+        case "T_NAMESPACE":
           $namespace = '';
 
           // If there is a namespace, extract it
@@ -292,9 +293,9 @@ class RegistryAutoloadSearcher {
           $namespace .= '\\';
           break;
 
-        case T_CLASS:
-        case T_INTERFACE:
-        case T_TRAIT:
+        case "T_CLASS":
+        case "T_INTERFACE":
+        case "T_TRAIT":
           // Find the classname
           while (($t = $tokens[++$i]) && is_array($t)) {
             if (T_STRING === $t[0]) {
