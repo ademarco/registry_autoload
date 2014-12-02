@@ -32,7 +32,14 @@ class RegistryAutoloadTestCase extends DrupalWebTestCase {
     $this->drupalSetContent($buffer);
     $this->assertText('Hello Core', 'PSR-0 class loading works.');
     $this->assertText('Hello Render_Cache', 'PSR-4 class loading works.');
+    $this->assertText('Implements x', 'Interface loading works.');
     $this->assertText('Hello No Namespace', 'No namespace class loading works.');
     $this->assertText('Hello custom some namespace', 'Custom namespace class loading works.');
+    $supports_traits = !version_compare(PHP_VERSION, '5.4', '<');
+
+    if ($supports_traits) {
+      $this->assertText('Hello Class using trait.', 'Trait loading works.');
+      $this->assertText('Hello Trait.', 'Trait loading works.');
+    }
   }
 }

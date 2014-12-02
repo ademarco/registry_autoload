@@ -241,6 +241,9 @@ class RegistryAutoloadSearcher {
    *
    * This lifts the core limitation of not supporting namespaces.
    *
+   * This code is now based on
+   * \Symfony\Component\ClassLoader\ClassMapGenerator::findClasses()
+   *
    * @param object $entry
    *   The registry entry as defined in processFiles(). The classes key will be
    *   updated in the entry if classes can be found.
@@ -256,22 +259,69 @@ class RegistryAutoloadSearcher {
     $contents = file_get_contents($filename);
     $namespace = '';
 
-    // We support one namespace per file.
-    if (preg_match('/^\s*(?:declare[^;]+;\s*)?namespace\s+\\\\?([a-zA-Z0-9_\\\\]+)/ms', $contents, $matches)) {
-      $namespace = $matches[1] . '\\';
+    // Check if this version of PHP supports traits.
+    $traits = version_compare(PHP_VERSION, '5.4', '<')
+      ? ''
+      : '|trait';
+
+    // Return early if there is no chance of matching anything in this file.
+    if (!preg_match('{\b(?:class|interface' . $traits . ')\s}i', $contents)) {
+      return array();
     }
 
-    // Now actually parse the file.
-    if (!preg_match_all('/^\s*(?:abstract|final)?\s*(class|interface)\s+([a-zA-Z0-9_]+)/m', $contents, $matches)) {
-      return FALSE;
-    }
+    $tokens = token_get_all($contents);
 
-    foreach ($matches[2] as $key => $name) {
-      $type = $matches[1][$key];
-      $entry->classes[$namespace . $name] = array(
-        'name' => $namespace . $name,
-        'type' => $type,
-      );
+    for ($i = 0, $max = count($tokens); $i < $max; $i++) {
+      $token = $tokens[$i];
+      if (is_string($token)) {
+        continue;
+      }
+
+      $class = '';
+
+      $token_name = token_name($token[0]);
+      switch ($token_name) {
+        case "T_NAMESPACE":
+          $namespace = '';
+
+          // If there is a namespace, extract it
+          while (($t = $tokens[++$i]) && is_array($t)) {
+            if (in_array($t[0], array(T_STRING, T_NS_SEPARATOR))) {
+              $namespace .= $t[1];
+            }
+          }
+          $namespace .= '\\';
+          break;
+
+        case "T_CLASS":
+        case "T_INTERFACE":
+        case "T_TRAIT":
+          // Find the classname
+          while (($t = $tokens[++$i]) && is_array($t)) {
+            if (T_STRING === $t[0]) {
+              $class .= $t[1];
+            }
+            elseif ($class !== '' && T_WHITESPACE == $t[0]) {
+              break;
+            }
+          }
+
+          $class_name = ltrim($namespace.$class, '\\');
+          $type = 'class';
+
+          if ($token[0] == T_INTERFACE) {
+            $type = 'interface';
+          }
+
+          $entry->classes[$class_name] = array(
+            'name' => $class_name,
+            'type' => $type,
+          );
+          break;
+
+        default:
+          break;
+      }
     }
 
     return TRUE;
