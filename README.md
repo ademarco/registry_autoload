@@ -86,7 +86,7 @@ Note that neither lib/ nor src/ are appended when specifying a path yourself.
 
 ### Traits
 
-PHP 5.4 traits are supported. For versions < 5.4, the trait files are simply ignored.
+PHP 5.4 traits are supported. For PHP versions < 5.4, the files with trait declarations are simply ignored.
 
 ### RELATED MODULES
 
