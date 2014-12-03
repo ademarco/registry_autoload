@@ -12,6 +12,7 @@ function registry_autoload_test_class_loading() {
   $x = new \Drupal\registry_autoload_test\Cache\RegistryAutoloadTestTest();
   $x = new \RegistryAutoloadTestTest();
   $x = new \custom\some\name\space\RegistryAutoloadTestTest();
+  $x = new \SomeVendor\SomeComponent\RegistryAutoloadTestTest();
 
   $supports_traits = !version_compare(PHP_VERSION, '5.4', '<');
   if ($supports_traits) {
