@@ -36,6 +36,7 @@ class RegistryAutoloadTestCase extends DrupalWebTestCase {
     $this->assertText('Hello No Namespace', 'No namespace class loading works.');
     $this->assertText('Hello custom some namespace', 'Custom namespace class loading works.');
     $this->assertText('Hello test-library: SomeVendor\SomeComponent', 'Arbitrary directory class loading works.');
+    $this->assertText('Hello global test-library: SomeOtherVendor\SomeComponent', 'Arbitrary directory class loading with DRUPAL_ROOT works. For this test to succeed registry_autoload must be in sites/all/modules.');
 
     $supports_traits = !version_compare(PHP_VERSION, '5.4', '<');
 
