@@ -51,9 +51,11 @@ function registry_autoload_registry_files_alter(&$files, $indexed_modules) {
         // Support DRUPAL_ROOT as the single allowed constant.
         $search_path = str_replace('DRUPAL_ROOT', DRUPAL_ROOT, $search_path);
 
-	$path = $search_path;
-        // If the path is not absolute, prepend the module directory.
-        if (strpos($search_path, '/') !== 0) {
+        // If the path is absolute, don't prepend the module directory.
+        if (strpos($search_path, '/') === 0) {
+          $path = $search_path;
+        }
+        else {
           $path .= '/' . $search_path;
         }
       }
