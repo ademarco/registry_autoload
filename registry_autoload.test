@@ -35,6 +35,8 @@ class RegistryAutoloadTestCase extends DrupalWebTestCase {
     $this->assertText('Implements x', 'Interface loading works.');
     $this->assertText('Hello No Namespace', 'No namespace class loading works.');
     $this->assertText('Hello custom some namespace', 'Custom namespace class loading works.');
+    $this->assertText('Hello test-library: SomeVendor\SomeComponent', 'Arbitrary directory class loading works.');
+
     $supports_traits = !version_compare(PHP_VERSION, '5.4', '<');
 
     if ($supports_traits) {

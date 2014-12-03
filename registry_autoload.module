@@ -41,8 +41,23 @@ function registry_autoload_registry_files_alter(&$files, $indexed_modules) {
     $class_files = array();
 
     // Detect class files based on namespaces.
-    foreach ($module->info['registry_autoload'] as $format) {
-      $class_files = array_merge($class_files, $autoload_searcher->findClassFiles($module, $format));
+    foreach ($module->info['registry_autoload'] as $search_path => $format) {
+      $path = $module->dir;
+
+      if (!is_numeric($search_path)) {
+        // If there is an arbitrary path, use an absolute format path.
+        $format = $format . '/absolute';
+
+        // Support DRUPAL_ROOT as the single allowed constant.
+        $search_path = str_replace('DRUPAL_ROOT', DRUPAL_ROOT, $search_path);
+
+	$path = $search_path;
+        // If the path is not absolute, prepend the module directory.
+        if (strpos($search_path, '/') !== 0) {
+          $path .= '/' . $search_path;
+        }
+      }
+      $class_files = array_merge($class_files, $autoload_searcher->findClassFiles($path, $format));
     }
 
     // Merge in user provided class files.
@@ -120,6 +135,9 @@ class RegistryAutoloadSearcher {
     'PSR-0' => 'lib',
     'PSR-4' => 'src',
     'PHPUnit' => 'tests/src',
+    'PSR-0/absolute' => '',
+    'PSR-4/absolute' => '',
+    'PHPUnit/absolute' => '',
   );
 
   /**
@@ -144,20 +162,24 @@ class RegistryAutoloadSearcher {
   /**
    * Finds class files in the given module for the given format.
    *
-   * @param object $module
-   *   The module object as given to hook_registry_files_alter().
+   * @param string $path
+   *   The path to search class files in.
    * @param string $format
    *   The format to scan for as specified in the $formatMap.
    *
    * @return array
    *   Returns all found php files for the given module and format.
    */
-  public function findClassFiles($module, $format) {
-    if (empty($this->formatMap[$format])) {
+  public function findClassFiles($path, $format) {
+    if (!isset($this->formatMap[$format])) {
       return array();
     }
+    $directory = $path;
+
     $subdir = $this->formatMap[$format];
-    $directory = $module->dir . '/' . $subdir;
+    if (!empty($subdir)) {
+      $directory .= '/' . $subdir;
+    }
     $class_files = file_scan_directory($directory, '/.*.php$/');
 
     return array_keys($class_files);
