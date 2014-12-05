@@ -71,8 +71,7 @@ mysql:
 before_install:
   - cd ./tests
   # Update composer to get faster dependency resolving.
-  # @todo Add self-update again when https://github.com/composer/composer/issues/3511 is fixed.
-  # - composer self-update
+  - composer self-update
   - composer global require "lionsad/drupal_ti:1.*"
   - drupal-ti before_install
 
